@@ -15,7 +15,9 @@ router = APIRouter(
 
 
 @router.post("/a-mango/face_recognition", response_model=FaceRecognitionUnlockResult)
-async def amango_face_recognition(image_url: str = "default_url", hand_sign: str = "default_value"):
+async def amango_face_recognition(image_url: str = Body("default_url", embed=False),
+                                  hand_sign: str = Body("default_value", embed=False)
+):
     try:
         face_recognition = FaceRecognition()
         hand_sign_detector = HandSignDetector("saved_model/best.pt")
@@ -46,9 +48,6 @@ async def amango_face_recognition(image_url: str = "default_url", hand_sign: str
             return {"result": "locked"}
 
 
-
-        # 라즈베리파이 카메라에서 받은 Face 이미지 (라즈베리파이에 Mediapipe Face Detector를 Live로 돌리고 만약 사람 얼굴이 디텍팅 되면
-        # 둘의 L2 distance 컴퓨트 하는 코드
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
