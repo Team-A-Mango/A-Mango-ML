@@ -36,17 +36,16 @@ async def amango_face_recognition(image_url: str = Body("default_url", embed=Fal
         if computed_distance < 0.8:
             face_lock = True
             if detected_hand_sign[0] == hand_sign:
-
-                return {"result": "unlocked"}
+                print("unlock")
+                pass
 
             else:
-                return {"result": "locked"}
-
+                print("lock")
+                pass
 
         else:
             face_lock = False
-            return {"result": "locked"}
-
+            print("lock")
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
