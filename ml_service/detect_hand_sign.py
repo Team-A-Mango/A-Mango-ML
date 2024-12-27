@@ -9,8 +9,7 @@ class HandSignDetector:
         self.detector = YOLOv10(saved_model_path)
 
 
-    def detect(self, image_path):
-        image = cv2.imread(image_path)
+    def detect(self, image):
         detected_results = self.detector(image)
 
         if detected_results and len(detected_results) > 0:  # 결과가 존재하는지 확인
