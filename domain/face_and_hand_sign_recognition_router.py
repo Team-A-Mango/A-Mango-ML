@@ -3,49 +3,103 @@ from ml_service.detect_handsign import HandSignDetector
 from ml_service.face_recognition import FaceRecognition
 from fastapi import Body,HTTPException
 from pydantic import BaseModel
-
+from fastapi import FastAPI, File, UploadFile
+from domain.json_utils import save_to_json, load_json
+import numpy as np
+import base64
+import cv2
 
 
 class FaceRecognitionUnlockResult(BaseModel):
-    result: str
+    first_storage_room_lock: str
+    second_storage_room_lock: str
+
 
 router = APIRouter(
     prefix="/api",
 )
 
 
-@router.post("/a-mango/face_recognition", response_model=FaceRecognitionUnlockResult)
-async def amango_face_recognition(image_url: str = Body("default_url", embed=False),
-                                  hand_sign: str = Body("default_value", embed=False)
+@router.post("/a-mango/get_parameters")
+async def get_parameters(image_url: str = Body("default_url", embed=False),
+                         hand_sign: str = Body("default_value", embed=False),
+                         storage_room_number: str = Body("default_value", embed=False)
 ):
+
+    storage_room_data = load_json("registered_storage_room_data.json")
+    if storage_room_number == "1":
+        storage_room_data["1.storage_room"]["image_url"] = image_url
+        storage_room_data["1.storage_room"]["hand_sign"] = hand_sign
+
+    elif storage_room_number == "2":
+        storage_room_data["2.storage_room"]["image_url"] = image_url
+        storage_room_data["2.storage_room"]["hand_sign"] = hand_sign
+
+
+    save_to_json("registered_storage_room_data.json", storage_room_data)
+
+
+
+
+
+@router.post("/a-mango/face_recognition", response_model=FaceRecognitionUnlockResult)
+async def amango_face_recognition(file: UploadFile = File(...)):
+
     try:
         face_recognition = FaceRecognition()
         hand_sign_detector = HandSignDetector("saved_model/best.pt")
-        registered_img = face_recognition.image_url_downloader(image_url)
-        query_img = "image/IU.jpeg"
-        query_face_img = face_recognition.extract_face(query_img, is_path=True)
-        registered_face_img = face_recognition.extract_face(registered_img)
-        embedded_res_img = face_recognition.face_embedding(registered_face_img)
-        embedded_query_img = face_recognition.face_embedding(query_face_img)
+        registered_storage_room_data = load_json("registered_storage_room_data.json")
+        computed_distance_list = list()
+        detected_hand_sign_list = list()
+        first_storage_room_lock = 'lock'
+        second_storage_room_lock = 'lock'
+        query_data = await file.read()
 
-        computed_distance = face_recognition.compute_similarity_distance(embedded_query_img, embedded_res_img)
+        # 이미지를 메모리에서 바로 읽어서 OpenCV로 처리
+        np_array = np.frombuffer(query_data, np.uint8)  # 바이트 데이터를 NumPy 배열로 변환
+        query_image = cv2.imdecode(np_array, cv2.IMREAD_COLOR)  # OpenCV로 이미지를 디코딩
 
-        detected_hand_sign = hand_sign_detector.detect(query_img)
+        for i in range(2):
+            query_face_img = face_recognition.extract_face(query_image)
+
+            registered_img = face_recognition.image_url_downloader(registered_storage_room_data[f"{str(i+1)}"+".storage_room"]["image_url"])
+            registered_face_img = face_recognition.extract_face(registered_img)
+
+            embedded_res_img = face_recognition.face_embedding(registered_face_img)
+            embedded_query_img = face_recognition.face_embedding(query_face_img)
+
+            computed_distance = face_recognition.compute_similarity_distance(embedded_query_img, embedded_res_img)
+            computed_distance_list.append(computed_distance)
+            detected_hand_sign = hand_sign_detector.detect(query_image)
+            detected_hand_sign_list.append(detected_hand_sign)
+
+            print(f"{i}.computed distance = {computed_distance}")
 
 
-        if computed_distance < 0.8:
-            face_lock = True
-            if detected_hand_sign[0] == hand_sign:
-                print("unlock")
-                pass
+
+
+
+        for i in range(2):
+            if computed_distance_list[i] < 0.9:
+                if detected_hand_sign_list[i][0] == registered_storage_room_data[f"{str(i+1)}"+".storage_room"]["hand_sign"]:
+                    if i == 0:
+                        first_storage_room_lock = "unlock"
+                        print("1번 보관함 open")
+
+
+                    if i == 1:
+                        second_storage_room_lock = "unlock"
+                        print("2번 보관함 open")
 
             else:
-                print("lock")
-                pass
+                first_storage_room_lock = "lock"
+                second_storage_room_lock = "lock"
+                print("all locked")
 
-        else:
-            face_lock = False
-            print("lock")
+        return {
+                "first_storage_room_lock" : first_storage_room_lock,
+                "second_storage_room_lock" : second_storage_room_lock
+                }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
