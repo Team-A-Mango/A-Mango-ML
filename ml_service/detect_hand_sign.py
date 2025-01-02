@@ -11,6 +11,7 @@ class HandSignDetector:
 
     def detect(self, image):
         detected_results = self.detector(image)
+        class_names = list()
 
         if detected_results and len(detected_results) > 0:  # 결과가 존재하는지 확인
             for result in detected_results:  # 여러 이미지의 결과가 있을 수 있음
@@ -18,6 +19,9 @@ class HandSignDetector:
                     class_indices = result.boxes.cls.cpu().numpy()  # 클래스 인덱스 추출
                     class_names = [result.names[int(cls_idx)] for cls_idx in class_indices]  # 클래스 이름 변환
                     print("Predicted class names:", class_names)
+
+
+
         else:
             print("No objects detected.")
 
