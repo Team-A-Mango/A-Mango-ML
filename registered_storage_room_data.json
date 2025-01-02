@@ -1,10 +1,12 @@
 {
     "1_storage_room": {
         "image_url": "https://search.pstatic.net/common/?src=http%3A%2F%2Fcafefiles.naver.net%2FMjAyMDA1MTJfMTE2%2FMDAxNTg5MjQ3NDM1MDg5.VAxu9KX-JCNHDZ0hpwKtvCieiLTDFIjp07Ir3LPOsWEg.BcYd4OGIrFIrxqdCkTAFZpo1M91nTA9WlpLN1GfOxocg.JPEG%2F%25B4%25D9%25BF%25EE%25B7%25CE%25B5%25E5.jpg&type=sc960_832",
-        "hand_sign": "peace"
+        "hand_sign": "peace",
+        "locking": "unlock"
     },
     "2_storage_room": {
         "image_url": "https://search.pstatic.net/common/?src=http%3A%2F%2Fcafefiles.naver.net%2FMjAyMDA1MTJfMTE2%2FMDAxNTg5MjQ3NDM1MDg5.VAxu9KX-JCNHDZ0hpwKtvCieiLTDFIjp07Ir3LPOsWEg.BcYd4OGIrFIrxqdCkTAFZpo1M91nTA9WlpLN1GfOxocg.JPEG%2F%25B4%25D9%25BF%25EE%25B7%25CE%25B5%25E5.jpg&type=sc960_832",
-        "hand_sign": "Ok"
+        "hand_sign": "Ok",
+        "locking": "unlock"
     }
 }
